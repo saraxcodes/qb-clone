@@ -17,14 +17,28 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     User[]
-  stores    Store[]
-  products  Product[]
-  customers Customer[]
-  suppliers Supplier[]
-  orders    Order[]
-  purchases Purchase[]
-  khataEntries KhataEntry[]
+  users          User[]
+  stores         Store[]
+  products       Product[]
+  customers      Customer[]
+  suppliers      Supplier[]
+  orders         Order[]
+  purchases      Purchase[]
+  khataEntries   KhataEntry[]
+  categories     Category[]
+  brands         Brand[]
+  manufacturers  Manufacturer[]
+  incomeHeads    IncomeHead[]
+  serviceGroups  ServiceGroup[]
+  taxes          Tax[]
+  charges        Charge[]
+  combos         Combo[]
+  memberships    Membership[]
+  vouchers       Voucher[]
+  promotions     Promotion[]
+  services       Service[]
+  productGroups  ProductGroup[]
+  units          Unit[]
 }
 
 enum Plan {
@@ -67,50 +81,268 @@ model Store {
   createdAt      DateTime     @default(now())
   orders         Order[]
   inventory      Inventory[]
+  productStoreMaps ProductStoreMap[]
 }
 
-// ─── CATALOG ───────────────────────────────────────────────
+// ─── CATALOG: CLASSIFICATION ───────────────────────────────
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String
-  parentId  String?
-  parent    Category? @relation("CategoryChildren", fields: [parentId], references: [id])
-  children  Category[] @relation("CategoryChildren")
-  products  Product[]
-  createdAt DateTime  @default(now())
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  image          String?
+  parentId       String?
+  parent         Category?    @relation("CategoryChildren", fields: [parentId], references: [id])
+  children       Category[]   @relation("CategoryChildren")
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Brand {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  image          String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Manufacturer {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+  createdAt      DateTime     @default(now())
+}
+
+model IncomeHead {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+  createdAt      DateTime     @default(now())
+}
+
+model ServiceGroup {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  services       Service[]
+  createdAt      DateTime     @default(now())
 }
 
 model Unit {
-  id        String    @id @default(cuid())
-  name      String
-  shortName String
-  products  Product[]
-  createdAt DateTime  @default(now())
-}
-
-model Product {
   id             String       @id @default(cuid())
   name           String
-  sku            String
-  barcode        String?
+  shortName      String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+  createdAt      DateTime     @default(now())
+}
+
+// ─── CATALOG: TAXES & CHARGES ──────────────────────────────
+
+model Tax {
+  id             String       @id @default(cuid())
+  name           String
+  rate           Float
+  type           TaxType      @default(PERCENTAGE)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+  createdAt      DateTime     @default(now())
+}
+
+enum TaxType {
+  PERCENTAGE
+  FIXED
+}
+
+model Charge {
+  id             String       @id @default(cuid())
+  name           String
+  amount         Float
+  type           ChargeType   @default(PERCENTAGE)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+  createdAt      DateTime     @default(now())
+}
+
+enum ChargeType {
+  PERCENTAGE
+  FIXED
+}
+
+// ─── CATALOG: PRODUCTS ─────────────────────────────────────
+
+model Product {
+  id               String        @id @default(cuid())
+  name             String
+  description      String?
+  sku              String?
+  barcode          String?
+  hsnCode          String?
+  price            Float         @default(0)
+  mrp              Float?
+  costPrice        Float         @default(0)
+  size             String?
+  color            String?
+  image            String?
+  isActive         Boolean       @default(true)
+  manageInventory  Boolean       @default(false)
+  priceIncludesTax Boolean       @default(false)
+  autoBarcode      Boolean       @default(false)
+  categoryId       String?
+  category         Category?     @relation(fields: [categoryId], references: [id])
+  brandId          String?
+  brand            Brand?        @relation(fields: [brandId], references: [id])
+  manufacturerId   String?
+  manufacturer     Manufacturer? @relation(fields: [manufacturerId], references: [id])
+  incomeHeadId     String?
+  incomeHead       IncomeHead?   @relation(fields: [incomeHeadId], references: [id])
+  unitId           String?
+  unit             Unit?         @relation(fields: [unitId], references: [id])
+  taxId            String?
+  tax              Tax?          @relation(fields: [taxId], references: [id])
+  chargeId         String?
+  charge           Charge?       @relation(fields: [chargeId], references: [id])
+  organizationId   String
+  organization     Organization  @relation(fields: [organizationId], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  inventory        Inventory[]
+  orderItems       OrderItem[]
+  purchaseItems    PurchaseItem[]
+  productStoreMaps ProductStoreMap[]
+  comboItems       ComboItem[]
+}
+
+model ProductGroup {
+  id             String       @id @default(cuid())
+  name           String
   description    String?
-  price          Float
-  costPrice      Float        @default(0)
-  taxRate        Float        @default(0)
-  image          String?
-  isActive       Boolean      @default(true)
-  categoryId     String?
-  category       Category?    @relation(fields: [categoryId], references: [id])
-  unitId         String?
-  unit           Unit?        @relation(fields: [unitId], references: [id])
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
   createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  inventory      Inventory[]
-  orderItems     OrderItem[]
-  purchaseItems  PurchaseItem[]
+}
+
+model Service {
+  id             String        @id @default(cuid())
+  name           String
+  description    String?
+  price          Float         @default(0)
+  duration       Int?          // minutes
+  serviceGroupId String?
+  serviceGroup   ServiceGroup? @relation(fields: [serviceGroupId], references: [id])
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime      @default(now())
+}
+
+// ─── CATALOG: PRICING ──────────────────────────────────────
+
+model ProductStoreMap {
+  id             String   @id @default(cuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id])
+  storeId        String
+  store          Store    @relation(fields: [storeId], references: [id])
+  price          Float?
+  isAvailable    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  @@unique([productId, storeId])
+}
+
+// ─── CATALOG: PROMOTIONAL ──────────────────────────────────
+
+model Combo {
+  id             String      @id @default(cuid())
+  name           String
+  description    String?
+  price          Float
+  isActive       Boolean     @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  items          ComboItem[]
+  createdAt      DateTime    @default(now())
+}
+
+model ComboItem {
+  id        String  @id @default(cuid())
+  comboId   String
+  combo     Combo   @relation(fields: [comboId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Float   @default(1)
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  price          Float
+  durationDays   Int
+  discountPct    Float        @default(0)
+  isActive       Boolean      @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+}
+
+model Voucher {
+  id             String       @id @default(cuid())
+  code           String       @unique
+  name           String
+  type           VoucherType  @default(PERCENTAGE)
+  value          Float
+  minOrderValue  Float        @default(0)
+  maxUses        Int?
+  usedCount      Int          @default(0)
+  validFrom      DateTime?
+  validTo        DateTime?
+  isActive       Boolean      @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+}
+
+enum VoucherType {
+  PERCENTAGE
+  FIXED
+}
+
+model Promotion {
+  id             String          @id @default(cuid())
+  name           String
+  type           PromotionType   @default(PERCENTAGE)
+  value          Float
+  validFrom      DateTime?
+  validTo        DateTime?
+  isActive       Boolean         @default(true)
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime        @default(now())
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED
+  BUY_X_GET_Y
 }
 
 // ─── INVENTORY ─────────────────────────────────────────────
