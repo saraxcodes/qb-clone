@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── TENANCY ───────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  plan      Plan     @default(STARTER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  stores    Store[]
+  products  Product[]
+  customers Customer[]
+  suppliers Supplier[]
+  orders    Order[]
+  purchases Purchase[]
+  khataEntries KhataEntry[]
+}
+
+enum Plan {
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+// ─── USERS ─────────────────────────────────────────────────
+
+model User {
+  id             String       @id @default(cuid())
+  name           String
+  email          String       @unique
+  passwordHash   String
+  role           UserRole     @default(STAFF)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  orders         Order[]
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+// ─── STORES ────────────────────────────────────────────────
+
+model Store {
+  id             String       @id @default(cuid())
+  name           String
+  address        String?
+  phone          String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  orders         Order[]
+  inventory      Inventory[]
+}
+
+// ─── CATALOG ───────────────────────────────────────────────
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    Category? @relation("CategoryChildren", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryChildren")
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Unit {
+  id        String    @id @default(cuid())
+  name      String
+  shortName String
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Product {
+  id             String       @id @default(cuid())
+  name           String
+  sku            String
+  barcode        String?
+  description    String?
+  price          Float
+  costPrice      Float        @default(0)
+  taxRate        Float        @default(0)
+  image          String?
+  isActive       Boolean      @default(true)
+  categoryId     String?
+  category       Category?    @relation(fields: [categoryId], references: [id])
+  unitId         String?
+  unit           Unit?        @relation(fields: [unitId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  inventory      Inventory[]
+  orderItems     OrderItem[]
+  purchaseItems  PurchaseItem[]
+}
+
+// ─── INVENTORY ─────────────────────────────────────────────
+
+model Inventory {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  quantity  Float    @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, storeId])
+}
+
+// ─── ORDERS / POS ──────────────────────────────────────────
+
+model Order {
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  status         OrderStatus @default(PENDING)
+  subtotal       Float
+  taxAmount      Float       @default(0)
+  discount       Float       @default(0)
+  total          Float
+  paymentMethod  String      @default("CASH")
+  customerId     String?
+  customer       Customer?   @relation(fields: [customerId], references: [id])
+  storeId        String
+  store          Store       @relation(fields: [storeId], references: [id])
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  items          OrderItem[]
+  createdAt      DateTime    @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Float
+  price     Float
+  discount  Float   @default(0)
+  total     Float
+}
+
+// ─── CUSTOMERS ─────────────────────────────────────────────
+
+model Customer {
+  id             String       @id @default(cuid())
+  name           String
+  phone          String?
+  email          String?
+  address        String?
+  creditLimit    Float        @default(0)
+  balance        Float        @default(0)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  orders         Order[]
+  khataEntries   KhataEntry[]
+  createdAt      DateTime     @default(now())
+}
+
+// ─── SUPPLIERS & PURCHASE ──────────────────────────────────
+
+model Supplier {
+  id             String     @id @default(cuid())
+  name           String
+  phone          String?
+  email          String?
+  balance        Float      @default(0)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  purchases      Purchase[]
+  createdAt      DateTime   @default(now())
+}
+
+model Purchase {
+  id             String         @id @default(cuid())
+  purchaseNumber String         @unique
+  status         PurchaseStatus @default(PENDING)
+  total          Float
+  supplierId     String
+  supplier       Supplier       @relation(fields: [supplierId], references: [id])
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  items          PurchaseItem[]
+  createdAt      DateTime       @default(now())
+}
+
+enum PurchaseStatus {
+  PENDING
+  RECEIVED
+  CANCELLED
+}
+
+model PurchaseItem {
+  id         String   @id @default(cuid())
+  purchaseId String
+  purchase   Purchase @relation(fields: [purchaseId], references: [id])
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  quantity   Float
+  costPrice  Float
+  total      Float
+}
+
+// ─── KHATA ─────────────────────────────────────────────────
+
+model KhataEntry {
+  id             String     @id @default(cuid())
+  type           KhataType
+  amount         Float
+  note           String?
+  customerId     String
+  customer       Customer   @relation(fields: [customerId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime   @default(now())
+}
+
+enum KhataType {
+  CREDIT
+  DEBIT
+  PAYMENT
+}
