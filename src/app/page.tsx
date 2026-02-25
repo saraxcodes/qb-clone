@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   ChevronRight,
   BarChart3,
@@ -175,9 +176,9 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             <a href="/login" className="hidden md:block text-sm font-medium text-zinc-400 hover:text-white transition-colors">Sign in</a>
-            <button className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-zinc-100 transition-colors shadow-lg">
+            <Link href="/register" className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-zinc-100 transition-colors shadow-lg">
               Start Free →
-            </button>
+            </Link>
           </div>
         </div>
       </nav>
@@ -207,12 +208,12 @@ export default function Home() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          <button className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-2xl shadow-indigo-500/30">
+          <Link href="/register" className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-2xl shadow-indigo-500/30">
             Start for free <ArrowRight className="w-5 h-5" />
-          </button>
-          <button className="w-full sm:w-auto px-8 py-4 rounded-full bg-white/5 text-white font-semibold text-lg hover:bg-white/10 transition-colors border border-white/10 flex items-center justify-center gap-2">
-            Watch demo <span className="text-indigo-400">▶</span>
-          </button>
+          </Link>
+          <Link href="/login" className="w-full sm:w-auto px-8 py-4 rounded-full bg-white/5 text-white font-semibold text-lg hover:bg-white/10 transition-colors border border-white/10 flex items-center justify-center gap-2">
+            Sign in <span className="text-indigo-400">▶</span>
+          </Link>
         </div>
 
         {/* Dashboard mockup */}
@@ -386,9 +387,12 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <button className={`w-full py-3.5 rounded-full font-semibold transition-all ${plan.highlight ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-indigo-500/30" : "bg-white/5 border border-white/10 hover:bg-white/10"}`}>
+                <Link
+                  href={plan.cta === "Contact Sales" ? "/login" : "/register"}
+                  className={`w-full py-3.5 rounded-full font-semibold transition-all text-center block ${plan.highlight ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-indigo-500/30" : "bg-white/5 border border-white/10 hover:bg-white/10"}`}
+                >
                   {plan.cta}
-                </button>
+                </Link>
               </div>
             ))}
           </div>
@@ -433,9 +437,9 @@ export default function Home() {
           <p className="text-xl text-zinc-400 font-light mb-10">
             Join 50,000+ businesses already running on QueueBuster. Start your free 14-day trial today.
           </p>
-          <button className="px-10 py-5 rounded-full bg-white text-black font-bold text-lg hover:scale-105 transition-transform inline-flex items-center gap-2 shadow-2xl">
+          <Link href="/register" className="px-10 py-5 rounded-full bg-white text-black font-bold text-lg hover:scale-105 transition-transform inline-flex items-center gap-2 shadow-2xl">
             Get started for free <ArrowRight className="w-5 h-5" />
-          </button>
+          </Link>
           <p className="text-zinc-500 text-sm mt-4">No credit card required · Cancel anytime</p>
         </div>
       </section>
